@@ -17,35 +17,69 @@ from matplotlib.pyplot import figure
 
 
 fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
-    index_col=[5], usecols=[0, 2, 3, 4, 5, 12, 13, 14,23,24,64])
+    index_col=[6], usecols=[0, 2, 3, 4, 5, 6, 12, 13, 14,23,24,64])
 #
-#. use columns: 'iID_Master_Volado', 'vuelo', 'source', 'dest', 'ruta_volado',
-#       'fecha_vuelo_real', 'fecha_vuelo_programada', 'class', 'fbasis',
+#. use columns: 'iID_Master_Volado', 'vuelo', 'source', 'dest', 'ruta_volado', #  'equipo', 'fecha_vuelo_real', 'fecha_vuelo_programada', 'class', 'fbasis',
 #       'canal'
-#. index coulumn: 'fecha_emision'
+#. index coulumn: 'fecha_emision' (6th posicion on usecols)
 
-# Test data
+print("FULL FRAME COLUMNS")
+print(fullDataFrame.columns)
+print("")
+
+print("FULL FRAME HEAD")
 print(fullDataFrame.head())
+# Same as head() -> print(fullDataFrame.iloc[:5, :11])
+print("")
 
 # Prepare selection criteria
-route = '***'
-dateRange = ['2019-01-01','2019-01-26']
-flight = True # 648
+# This is the only area to change query parameters
+#
+route = 'PVR-GDL' # use route 'MEX-ACA' or '***' for all
+dateRange = ['2019-01-01','2019-01-06'] # use ['yyyy-mm-dd','yyyy-mm-dd']
+flight = None # Fligh number (numeric) for specific flight:648 use None for all
 
-criterioRuta = fullDataFrame.ruta_volado != route # fullDataFrame.ruta_volado == route == True
+
+# TODO falta el if de la ruta
+criterioRuta = fullDataFrame.ruta_volado == route
 criterioFecha = (fullDataFrame['fecha_vuelo_real']>=pd.to_datetime(dateRange[0])) & (fullDataFrame['fecha_vuelo_real']<=pd.to_datetime(dateRange[1]))
-criterioVuelo = True # fullDataFrame.vuelo == flight
+if (flight is None):
+    criterioVuelo = True
+else:
+    criterioVuelo = fullDataFrame.vuelo == flight
+
 selector = (criterioRuta & criterioFecha & criterioVuelo)
 
 # Filter Analisys Data Frame
-dfAnalysis = fullDataFrame.loc[(selector) , fullDataFrame.columns.isin(['fecha_vuelo_real','vuelo','ruta_volado', 'dias_anticipacion'])]
+dfAnalysis = fullDataFrame.loc[(selector) , fullDataFrame.columns.isin(['fecha_vuelo_real','vuelo','ruta_volado', 'equipo', 'dias_anticipacion'])]
 
 dfAnalysis.sort_index()
+print("DF ANALYSIS HEAD")
+print(dfAnalysis.head())
+print("")
 
 # Calculate advance bookings in days
 dfAnalysis['dias_anticipacion'] = (dfAnalysis.index.get_level_values('fecha_emision') - dfAnalysis.fecha_vuelo_real).dt.days
 
+print("DF ANALYSIS DESCRIBE")
 print(dfAnalysis.describe(include='all'))
+print("")
+
+
+if (flight == True):
+    flightCount = dfAnalysis.vuelo.value_counts().sum()
+else:
+    flightCount = (dfAnalysis.vuelo == flight).value_counts()
+
+print("FLIGHT COUNT")
+print(f"Flight(s)[{flight}] value_count: {flightCount} ")
+print("")
+
+print("FLIGHT COUNT PER EQUIPMENT")
+print(dfAnalysis.groupby(['vuelo','equipo']).equipo.nunique())
+#grouped_df = dfAnalysis.groupby( [ "vuelo", "equipo"] )
+#print(grouped_df.head())
+print("")
 
 # Histogram value counts
 seriesHistogram = dfAnalysis.dias_anticipacion.value_counts()
@@ -64,7 +98,10 @@ dfHistogram['acumulado'] = dfHistogram.dias_anticipacion.cumsum()
 # Add cumulative percentage. TODO Fix it to reflect actual LF % HAS TO BE AFTER SORT
 dfHistogram['cum_percent'] = 100 * (1 - dfHistogram.dias_anticipacion.cumsum()/dfHistogram.dias_anticipacion.sum())
 
+print("HISTOGRAM DATA")
 print(dfHistogram)
+print("")
+
 #print(dfHistogram.index)
 #dfHistogram.plot.line(y = 'cum_percent')
 #dfHistogram.plot.line(y = 'acumulado')
@@ -76,7 +113,7 @@ print(dfHistogram)
 # TODO figure out how to get in in a PDF
 
 flightStr  = flight if flight != True else 'Todos'
-routeStr = routeStr if route != '***' else 'Todas'
+routeStr = route if route != '***' else 'Todas'
 
 
 with PdfPages('bookingsCurves.pdf') as pdf:
