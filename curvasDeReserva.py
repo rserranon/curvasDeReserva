@@ -22,11 +22,11 @@ fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_date
 print(fullDataFrame.head())
 
 # Prepare selection criteria
-route = 'VER-MEX'
-dateRange = ['2019-01-20','2019-01-26']
+route = '***'
+dateRange = ['2019-01-01','2019-01-26']
 flight = True # 648
 
-criterioRuta = fullDataFrame.ruta_volado == route # fullDataFrame.ruta_volado == True
+criterioRuta = fullDataFrame.ruta_volado != route # fullDataFrame.ruta_volado == route == True
 criterioFecha = (fullDataFrame['fecha_vuelo_real']>=pd.to_datetime(dateRange[0])) & (fullDataFrame['fecha_vuelo_real']<=pd.to_datetime(dateRange[1]))
 criterioVuelo = True # fullDataFrame.vuelo == flight
 selector = (criterioRuta & criterioFecha & criterioVuelo)
@@ -56,7 +56,7 @@ dfHistogram.sort_index(inplace = True, ascending = False)
 dfHistogram['acumulado'] = dfHistogram.dias_anticipacion.cumsum()
 
 # Add cumulative percentage. TODO Fix it to reflect actual LF % HAS TO BE AFTER SORT
-dfHistogram['cum_percent'] = 100 * dfHistogram.dias_anticipacion.cumsum()/dfHistogram.dias_anticipacion.sum()
+dfHistogram['cum_percent'] = 100 * (1 - dfHistogram.dias_anticipacion.cumsum()/dfHistogram.dias_anticipacion.sum())
 
 print(dfHistogram)
 #print(dfHistogram.index)
@@ -70,6 +70,7 @@ print(dfHistogram)
 # TODO figure out how to get in in a PDF
 
 flightStr  = flight if flight != True else 'Todos'
+routeStr = routeStr if route != '***' else 'Todas'
 
 
 with PdfPages('bookingsCurves.pdf') as pdf:
@@ -80,14 +81,14 @@ with PdfPages('bookingsCurves.pdf') as pdf:
     pdf.savefig()
     plt.close()
 
-    title = f"Porcentaje Acumulado \n Fecha: {dateRange} Ruta: {route} vuelo: {flightStr}"
+    title = f"Porcentaje Acumulado \n Fecha: {dateRange}, Ruta: {routeStr}, vuelo: {flightStr}"
     dfHistogram.plot.line(y = 'cum_percent')
     plt.title(title)
     pdf.savefig()  # saves the current figure into a pdf page
     plt.close()
 
 
-    title = f"PAX Acumulados \n Fecha: {dateRange} Ruta: {route} vuelo: {flightStr}"
+    title = f"PAX Acumulados \n Fecha: {dateRange}, Ruta: {routeStr}, vuelo: {flightStr}"
     dfHistogram.plot.line(y = 'acumulado')
     plt.title(title)
     pdf.savefig()
