@@ -1,5 +1,11 @@
 #
-# Este es el bueno para usar fecha_emisión como index
+# Decription: Script para generar chart de curvas de reservas históricas
+#             a partir de la fecha de vuelo, para todas las rutas o rutas
+#             individuales, para todos los vuelos o vuelos individuales y
+#             oara un rango de fechas <inicio> <fin>
+#
+# Author:     Roberto Serrano
+# Date:       2019/01/08
 #
 import pandas as pd
 from pandas import ExcelWriter
