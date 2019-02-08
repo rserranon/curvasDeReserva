@@ -77,8 +77,6 @@ print("")
 
 print("FLIGHT COUNT PER EQUIPMENT")
 print(dfAnalysis.groupby(['vuelo','equipo']).equipo.nunique())
-#grouped_df = dfAnalysis.groupby( [ "vuelo", "equipo"] )
-#print(grouped_df.head())
 print("")
 
 # Histogram value counts
