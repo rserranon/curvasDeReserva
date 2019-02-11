@@ -14,9 +14,11 @@ import datetime
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.pyplot import figure
+import numpy as np
 
 
-fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
+#fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
+fullDataFrame = pd.read_excel('Volados_Canal_Test_PVR_GDL_111_115_1_al_15_Enero_2019.xlsx', parse_dates=True,
     index_col=[6], usecols=[0, 2, 3, 4, 5, 6, 12, 13, 14,23,24,64])
 #
 #. use columns: 'iID_Master_Volado', 'vuelo', 'source', 'dest', 'ruta_volado', #  'equipo', 'fecha_vuelo_real', 'fecha_vuelo_programada', 'class', 'fbasis',
@@ -36,8 +38,8 @@ print("")
 # This is the only area to change query parameters
 #
 route = 'PVR-GDL' # use route 'MEX-ACA' or '***' for all
-dateRange = ['2019-01-01','2019-01-06'] # use ['yyyy-mm-dd','yyyy-mm-dd']
-flight = None # Fligh number (numeric) for specific flight:648 use None for all
+dateRange = ['2019-01-01','2019-01-12'] # use ['yyyy-mm-dd','yyyy-mm-dd']
+flight = 111 # Fligh number (numeric) for specific flight:648 use None for all
 
 
 # TODO falta el if de la ruta
@@ -76,7 +78,11 @@ print(f"Flight(s)[{flight}] value_count: {flightCount} ")
 print("")
 
 print("FLIGHT COUNT PER EQUIPMENT")
-print(dfAnalysis.groupby(['vuelo','equipo']).equipo.nunique())
+groups =dfAnalysis.groupby(['fecha_vuelo_real','vuelo','equipo']).equipo.nunique().reset_index(name="group_count")
+groups['Seats'] = np.where(groups.equipo == 'AT7', 72,
+                                 np.where(groups.equipo == 'ATR', 50, 0))
+print(groups.head())
+print(f"Suma Asientos = : {groups['Seats'].sum()}")
 print("")
 
 # Histogram value counts
@@ -88,13 +94,13 @@ dfHistogram = seriesHistogram.to_frame()
 
 
 # Plot cumulative line
-dfHistogram.sort_index(inplace = True, ascending = False)
+dfHistogram.sort_index(inplace = True, ascending = True)
 
 # Add cumulative column HAS TO BE AFTER SORT
 dfHistogram['acumulado'] = dfHistogram.dias_anticipacion.cumsum()
 
 # Add cumulative percentage. TODO Fix it to reflect actual LF % HAS TO BE AFTER SORT
-dfHistogram['cum_percent'] = 100 * (1 - dfHistogram.dias_anticipacion.cumsum()/dfHistogram.dias_anticipacion.sum())
+dfHistogram['cum_percent'] = 100 * (1 - ((groups['Seats'].sum() - dfHistogram.dias_anticipacion.cumsum())/groups['Seats'].sum()))
 
 print("HISTOGRAM DATA")
 print(dfHistogram)
