@@ -16,8 +16,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.pyplot import figure
 import numpy as np
 
-
-fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
+fullDataFrame = pd.read_csv('Volados_Canal_201810-201901.csv', parse_dates=[6,7,8],
+#fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
 #fullDataFrame = pd.read_excel('Volados_Canal_Test_PVR_GDL_111_115_1_al_15_Enero_2019.xlsx', parse_dates=True,
     index_col=[6], usecols=[0, 2, 3, 4, 5, 6, 12, 13, 14,23,24,64])
 #
