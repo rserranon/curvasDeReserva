@@ -38,7 +38,7 @@ print("")
 # This is the only area to change query parameters
 #
 route = 'ALL' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
-dateRange = ['2019-01-01','2019-01-01'] # use ['yyyy-mm-dd','yyyy-mm-dd']
+dateRange = ['2019-01-01','2019-01-31'] # use ['yyyy-mm-dd','yyyy-mm-dd']
 flight = None # Fligh number (numeric) for specific flight:648 use None for all
 
 
@@ -77,6 +77,8 @@ flightCountSet = dfAnalysis.groupby(['fecha_vuelo_real','vuelo']).vuelo.nunique(
 flightCount = flightCountSet.vuelo_fecha_count.count()
 
 print("FLIGHT COUNT")
+print(f"No. de Vuelos: {flightCount}")
+print("")
 print(flightCountSet.head())
 print("")
 
@@ -93,7 +95,7 @@ print("")
 print("FLIGHT COUNT PER DATE, FLIGHT, EQUIPMENT")
 groups =dfAnalysis.groupby(['fecha_vuelo_real','vuelo','equipo']).equipo.nunique().reset_index(name="group_count")
 groups['Seats'] = np.where(groups.equipo == 'AT7', 72,
-                                 np.where(groups.equipo == 'ATR', 50, 0))
+                                 np.where(groups.equipo == 'ATR', 48, 0))
 print(groups.head(10))
 print(f"Suma Asientos = : {groups['Seats'].sum()}")
 print("")
@@ -133,12 +135,14 @@ flightStr  = flight if flight != None else 'Todos'
 routeStr = route if route != 'ALL' else 'Todas'
 
 
-with PdfPages('bookingsCurves.pdf') as pdf:
+with PdfPages(f'Curvas-{dateRange[0]}-{dateRange[1]}-{routeStr}.pdf') as pdf:
     title = "Curvas de Reservas"
+    subTitle = f"Vuelos del: {dateRange[0]} al {dateRange[1]} \n Ruta: {routeStr}"
     firstPage = plt.figure(figsize=(8.5, 11))
     firstPage.clf()
-    firstPage.text(0.5,0.5,title,transform=firstPage.transFigure, size=22, ha='center')
-    firstPage.text(0.5,0.3,"Planeacion Financiera & BI",transform=firstPage.transFigure, size=18, ha='center')
+    firstPage.text(0.5,0.6,title,transform=firstPage.transFigure, size=22, ha='center')
+    firstPage.text(0.5,0.4,subTitle,transform=firstPage.transFigure, size=18, ha='center')
+    firstPage.text(0.5,0.2,"Planeacion Financiera & BI",transform=firstPage.transFigure, size=14, ha='center')
     pdf.savefig()
     plt.close()
 
