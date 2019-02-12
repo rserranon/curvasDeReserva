@@ -37,14 +37,19 @@ print("")
 # Prepare selection criteria
 # This is the only area to change query parameters
 #
-route = 'PVR-GDL' # use route 'MEX-ACA' or '***' for all
-dateRange = ['2019-01-01','2019-01-12'] # use ['yyyy-mm-dd','yyyy-mm-dd']
-flight = 111 # Fligh number (numeric) for specific flight:648 use None for all
+route = 'ALL' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
+dateRange = ['2019-01-01','2019-01-01'] # use ['yyyy-mm-dd','yyyy-mm-dd']
+flight = None # Fligh number (numeric) for specific flight:648 use None for all
 
 
 # TODO falta el if de la ruta
-criterioRuta = fullDataFrame.ruta_volado == route
+if (route == 'ALL'):
+    criterioRuta = fullDataFrame.ruta_volado != route
+else:
+    criterioRuta = fullDataFrame.ruta_volado == route
+
 criterioFecha = (fullDataFrame['fecha_vuelo_real']>=pd.to_datetime(dateRange[0])) & (fullDataFrame['fecha_vuelo_real']<=pd.to_datetime(dateRange[1]))
+
 if (flight is None):
     criterioVuelo = True
 else:
@@ -67,21 +72,26 @@ print("DF ANALYSIS DESCRIBE")
 print(dfAnalysis.describe(include='all'))
 print("")
 
-
-if (flight == True):
-    flightCount = dfAnalysis.vuelo.value_counts().sum()
-else:
-    flightCount = (dfAnalysis.vuelo == flight).value_counts()
-
+flightCount = dfAnalysis.vuelo.nunique()
 print("FLIGHT COUNT")
-print(f"Flight(s)[{flight}] value_count: {flightCount} ")
+print(flightCount)
 print("")
 
-print("FLIGHT COUNT PER EQUIPMENT")
+if (flight == True):
+    paxCount = dfAnalysis.vuelo.value_counts().sum()
+else:
+    paxCount = (dfAnalysis.vuelo == flight).value_counts()
+
+print("PAX COUNT")
+#print(type(paxCount))
+print(f"Flight(s):[{flight}] PAX count: {paxCount} ")
+print("")
+
+print("FLIGHT COUNT PER DATE, FLIGHT, EQUIPMENT")
 groups =dfAnalysis.groupby(['fecha_vuelo_real','vuelo','equipo']).equipo.nunique().reset_index(name="group_count")
 groups['Seats'] = np.where(groups.equipo == 'AT7', 72,
                                  np.where(groups.equipo == 'ATR', 50, 0))
-print(groups.head())
+print(groups.head(10))
 print(f"Suma Asientos = : {groups['Seats'].sum()}")
 print("")
 
@@ -116,27 +126,33 @@ print("")
 
 # TODO figure out how to get in in a PDF
 
-flightStr  = flight if flight != True else 'Todos'
-routeStr = route if route != '***' else 'Todas'
+flightStr  = flight if flight != None else 'Todos'
+routeStr = route if route != 'ALL' else 'Todas'
 
 
 with PdfPages('bookingsCurves.pdf') as pdf:
     title = "Curvas de Reservas"
-    firstPage = plt.figure(figsize=(11.69, 8.27))
+    firstPage = plt.figure(figsize=(8.5, 11))
     firstPage.clf()
     firstPage.text(0.5,0.5,title,transform=firstPage.transFigure, size=22, ha='center')
+    firstPage.text(0.5,0.3,"Planeacion Financiera & BI",transform=firstPage.transFigure, size=18, ha='center')
     pdf.savefig()
     plt.close()
 
-    title = f"Porcentaje Acumulado \n Fecha: {dateRange}, Ruta: {routeStr}, vuelo: {flightStr}"
-    dfHistogram.plot.line(y = 'cum_percent')
+    title = f"Porcentaje Acumulado Fecha: {dateRange} \n Ruta: {routeStr}, vuelo(s): {flightStr}, No. Vuelos: {flightCount}"
+    # This is the way to plot two series (with a list) and with an alternate scale chart = dfHistogram.plot.line(grid=True, y = ['cum_percent','acumulado'], secondary_y = 'acumulado')
+    chart = dfHistogram.plot.line(grid=True, y = ['cum_percent'])
+    chart.set_xlabel("Días de anticipación")
+    chart.set_ylabel("puntos porcentuales de LF")
     plt.title(title)
     pdf.savefig()  # saves the current figure into a pdf page
     plt.close()
 
 
-    title = f"PAX Acumulados \n Fecha: {dateRange}, Ruta: {routeStr}, vuelo: {flightStr}"
-    dfHistogram.plot.line(y = 'acumulado')
+    title = f"PAX Acumulados Fecha: {dateRange} \n Ruta: {routeStr}, vuelo(s): {flightStr}, No. vuelos: {flightCount}"
+    chart = dfHistogram.plot.line(grid=True, y = 'acumulado')
+    chart.set_xlabel("Días de anticipación")
+    chart.set_ylabel("Pasajeros (PAX)")
     plt.title(title)
     pdf.savefig()
     plt.close()
