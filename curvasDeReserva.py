@@ -17,8 +17,8 @@ from matplotlib.pyplot import figure
 import numpy as np
 
 
-#fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
-fullDataFrame = pd.read_excel('Volados_Canal_Test_PVR_GDL_111_115_1_al_15_Enero_2019.xlsx', parse_dates=True,
+fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
+#fullDataFrame = pd.read_excel('Volados_Canal_Test_PVR_GDL_111_115_1_al_15_Enero_2019.xlsx', parse_dates=True,
     index_col=[6], usecols=[0, 2, 3, 4, 5, 6, 12, 13, 14,23,24,64])
 #
 #. use columns: 'iID_Master_Volado', 'vuelo', 'source', 'dest', 'ruta_volado', #  'equipo', 'fecha_vuelo_real', 'fecha_vuelo_programada', 'class', 'fbasis',
@@ -72,9 +72,12 @@ print("DF ANALYSIS DESCRIBE")
 print(dfAnalysis.describe(include='all'))
 print("")
 
-flightCount = dfAnalysis.vuelo.nunique()
+#flightCount = dfAnalysis.vuelo.nunique()
+flightCountSet = dfAnalysis.groupby(['fecha_vuelo_real','vuelo']).vuelo.nunique().reset_index(name="vuelo_fecha_count")
+flightCount = flightCountSet.vuelo_fecha_count.count()
+
 print("FLIGHT COUNT")
-print(flightCount)
+print(flightCountSet.head())
 print("")
 
 if (flight == True):
