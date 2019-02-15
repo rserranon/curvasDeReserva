@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.pyplot import figure
 import numpy as np
+import calendar
 
 fullDataFrame = pd.read_csv('Volados_Canal_201810-201901.csv', parse_dates=[6,7,8],
 #fullDataFrame = pd.read_excel('Volados_Canal_20190101-20190126.xlsx', parse_dates=True,
-#fullDataFrame = pd.read_excel('Volados_Canal_Test_PVR_GDL_111_115_1_al_15_Enero_2019.xlsx', parse_dates=True,
     index_col=[6], usecols=[0, 2, 3, 4, 5, 6, 12, 13, 14,23,24,64])
 #
 #. use columns: 'iID_Master_Volado', 'vuelo', 'source', 'dest', 'ruta_volado', #  'equipo', 'fecha_vuelo_real', 'fecha_vuelo_programada', 'class', 'fbasis',
@@ -34,15 +34,31 @@ print(fullDataFrame.head())
 # Same as head() -> print(fullDataFrame.iloc[:5, :11])
 print("")
 
+# Several lines/pages criteria
+
+routesGroup = ['MEX-ACA','ACA-MEX','MEX-GDL','GDL-MEX','GDL-PVR','PVR-GDL']
+cal= calendar.Calendar()
+#Get the weeks of yyyy, mm
+weeksMonth  = cal.monthdatescalendar(2019, 1)
+print(f"numer of weks: {len(weeksMonth)}")
+
+print("First week")
+#1st day of week 1
+print(weeksMonth[0][0])
+#last day of week 1
+print(weeksMonth[0][-1])
+
+# We are ready to process each week of the month
+
 # Prepare selection criteria
 # This is the only area to change query parameters
 #
-route = 'ALL' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
-dateRange = ['2019-01-01','2019-01-31'] # use ['yyyy-mm-dd','yyyy-mm-dd']
+route = 'ACA-MEX' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
+dateRange = ['2018-10-01','2018-10-31'] # use ['yyyy-mm-dd','yyyy-mm-dd']
 flight = None # Fligh number (numeric) for specific flight:648 use None for all
 
 
-# TODO falta el if de la ruta
+# TODO falta el ifde la ruta
 if (route == 'ALL'):
     criterioRuta = fullDataFrame.ruta_volado != route
 else:
@@ -76,8 +92,8 @@ print("")
 flightCountSet = dfAnalysis.groupby(['fecha_vuelo_real','vuelo']).vuelo.nunique().reset_index(name="vuelo_fecha_count")
 flightCount = flightCountSet.vuelo_fecha_count.count()
 
-print("FLIGHT COUNT")
-print(f"No. de Vuelos: {flightCount}")
+print("FLIGHT COUNT SET")
+print(f"No. de Vuelos(flightCount): {flightCount}")
 print("")
 print(flightCountSet.head())
 print("")
@@ -149,6 +165,7 @@ with PdfPages(f'Curvas-{dateRange[0]}-{dateRange[1]}-{routeStr}.pdf') as pdf:
     title = f"Porcentaje Acumulado Fecha: {dateRange} \n Ruta: {routeStr}, vuelo(s): {flightStr}, No. Vuelos: {flightCount}"
     # This is the way to plot two series (with a list) and with an alternate scale chart = dfHistogram.plot.line(grid=True, y = ['cum_percent','acumulado'], secondary_y = 'acumulado')
     chart = dfHistogram.plot.line(grid=True, y = ['cum_percent'])
+    chart.set_xlim(-100, 0)
     chart.set_xlabel("Días de anticipación")
     chart.set_ylabel("puntos porcentuales de LF")
     plt.title(title)
@@ -158,6 +175,7 @@ with PdfPages(f'Curvas-{dateRange[0]}-{dateRange[1]}-{routeStr}.pdf') as pdf:
 
     title = f"PAX Acumulados Fecha: {dateRange} \n Ruta: {routeStr}, vuelo(s): {flightStr}, No. vuelos: {flightCount}"
     chart = dfHistogram.plot.line(grid=True, y = 'acumulado')
+    chart.set_xlim(-100, 0)
     chart.set_xlabel("Días de anticipación")
     chart.set_ylabel("Pasajeros (PAX)")
     plt.title(title)
