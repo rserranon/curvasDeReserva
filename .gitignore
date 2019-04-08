@@ -115,3 +115,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 Volados_Canal_201810-201901.csv
+*.pdf
+*.xlsx
+volados_canal_201801-201901.csv
