@@ -11,6 +11,7 @@ import pandas as pd
 from pandas import ExcelWriter
 from pandas import ExcelFile
 import datetime
+import time
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.pyplot import figure
@@ -25,6 +26,7 @@ fullDataFrame = pd.read_csv('Volados_Canal_201810-201901.csv', parse_dates=[6,7,
 #       'canal'
 #. index coulumn: 'fecha_emision' (6th posicion on usecols)
 
+# fullDataFrame carga todos los datos del archivo
 print("FULL FRAME COLUMNS")
 print(fullDataFrame.columns)
 print("")
@@ -53,23 +55,31 @@ print(weeksMonth[0][-1])
 # Prepare selection criteria
 # This is the only area to change query parameters
 #
-route = 'ACA-MEX' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
+route = 'ALL' # use route (i.e. 'MEX-ACA') or ['ALL'] for all
 dateRange = ['2018-10-01','2018-10-31'] # use ['yyyy-mm-dd','yyyy-mm-dd']
-flight = None # Fligh number (numeric) for specific flight:648 use None for all
+flight = 648 # Fligh number (numeric) for specific flight:648 use None for all
 
 
-# TODO falta el ifde la ruta
+# TODO falta el if de la ruta
 if (route == 'ALL'):
-    criterioRuta = fullDataFrame.ruta_volado != route
+    criterioRuta = fullDataFrame.ruta_volado != route # todas las rutas distintas a ALL
 else:
     criterioRuta = fullDataFrame.ruta_volado == route
 
+# curiosidad para saber de que tipo es el criterio de las rutas
+# en relaidad es una serie de pandas: <class 'pandas.core.series.Series'>
+print(type(criterioRuta))
+
+# fechas en el rando de la lista dataRange[0] a [1]
 criterioFecha = (fullDataFrame['fecha_vuelo_real']>=pd.to_datetime(dateRange[0])) & (fullDataFrame['fecha_vuelo_real']<=pd.to_datetime(dateRange[1]))
 
+# TODO el criyerio vuelo debería ser un filtro sobre criterioFecha dado que es un subset del dataframe filtrado
 if (flight is None):
     criterioVuelo = True
 else:
-    criterioVuelo = fullDataFrame.vuelo == flight
+    criterioVuelo = (fullDataFrame.vuelo == flight)
+print(f"criterio vuelo: {criterioVuelo}")
+
 
 selector = (criterioRuta & criterioFecha & criterioVuelo)
 
@@ -184,11 +194,11 @@ with PdfPages(f'Curvas-{dateRange[0]}-{dateRange[1]}-{routeStr}.pdf') as pdf:
 
 
     # We can also set the file's metadata via the PdfPages object:
-    # d = pdf.infodict()
-    # d['Title'] = 'Bookings Curve PDF Example'
-    # d['Author'] = u'Roberto Serrano'
-    # d['Subject'] = 'How to create a multipage pdf file and set its metadata'
-    # d['Keywords'] = 'bookings curves'
-    # d['CreationDate'] = datetime.datetime('2019/02/06')
-    # d['ModDate'] = datetime.datetime.today()
+    document = pdf.infodict()
+    document['Title'] = 'Bookings Curve PDF Example'
+    document['Author'] = 'Roberto Serrano'
+    document['Subject'] = 'How to create a multipage pdf file and set its metadata'
+    document['Keywords'] = 'bookings curves'
+    document['CreationDate'] = datetime.datetime.strptime('08042019', '%d%m%Y') 
+    document['ModDate'] = datetime.datetime.today()
 
